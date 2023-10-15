@@ -75,7 +75,7 @@ class fsm {
       }
       return m;
     }
-    // Check for submachine conditions
+    // Check for submachine transitions
     fsm<Σ, S>* sub;
     for (auto table : m.submachines) {
       auto input_pred = get<0>(table);
@@ -88,7 +88,7 @@ class fsm {
       (*sub) << input;
       return *sub;
     }
-    throw "Invalid state";
+    throw "Invalid input";
   }
 
   S currentState() const { return current; }
