@@ -1,6 +1,5 @@
-#include <functional>
 #include <stack>
-#include <unordered_map>
+#include <vector>
 
 #include "higher.cpp"
 
@@ -10,7 +9,7 @@ template <typename Σ, typename S>
 class fsm;
 
 template <typename Σ, typename S>
-fsm<Σ, S>& operator<<(fsm<Σ, S>&, Σ);
+fsm<Σ, S> &operator<<(fsm<Σ, S> &, Σ);
 
 /// @brief https://en.wikipedia.org/wiki/Finite-state_machine#Mathematical_model
 /// @tparam Σ is the input alphabet (a finite non-empty type of symbols);
@@ -20,11 +19,11 @@ class fsm {
  public:
   // State-transition function types
   using δ = function<S(S, Σ)>;
-  using γ = function<fsm*(S, Σ)>;
+  using γ = function<fsm *(S, Σ)>;
 
   fsm(S initial, π<S> is_terminal)
       : current(initial), is_terminal(is_terminal) {
-    machine_stack = new stack<fsm*>();
+    machine_stack = new stack<fsm *>();
     machine_stack->push(this);
   }
 
@@ -64,6 +63,8 @@ class fsm {
 
 #pragma region Submachine transition registration
 
+  void on(Σ in, S from, γ t) { return on(is(in), is(from), t); }
+
   void on(Σ in, π<S> from, γ t) { return on(is(in), from, t); }
 
   void on(π<Σ> in, π<S> from, γ t) {
@@ -72,8 +73,7 @@ class fsm {
 
 #pragma endregion
 
-  // Process an input and transition to the new state
-  friend fsm& operator<< <>(fsm& m, Σ input);
+  friend fsm &operator<< <>(fsm &, Σ);
 
   S state() const { return current; }
 
@@ -82,11 +82,12 @@ class fsm {
   π<S> is_terminal;
   vector<tuple<π<Σ>, π<S>, δ>> transitions;
   vector<tuple<π<Σ>, π<S>, γ>> submachines;
-  stack<fsm*>* machine_stack;
+  stack<fsm *> *machine_stack;
 };
 
+// Process an input and transition to the new state
 template <typename Σ, typename S>
-fsm<Σ, S>& operator<<(fsm<Σ, S>& m, Σ input) {
+fsm<Σ, S> &operator<<(fsm<Σ, S> &m, Σ input) {
   bool found = false;
   // Handle upper-level transitions
   S new_state;
@@ -107,7 +108,7 @@ fsm<Σ, S>& operator<<(fsm<Σ, S>& m, Σ input) {
     return m;
   }
   // Handle submachine transitions
-  fsm<Σ, S>* sub;
+  fsm<Σ, S> *sub;
   for (auto tup : m.submachines) {
     auto input_pred = get<0>(tup);
     auto state_pred = get<1>(tup);
@@ -122,4 +123,10 @@ fsm<Σ, S>& operator<<(fsm<Σ, S>& m, Σ input) {
     return *m.machine_stack->top();
   }
   throw "Invalid input";
+}
+
+template <typename Σ, typename S>
+fsm<Σ, S> &operator<<=(fsm<Σ, S> &m, Σ input) {
+  m = m << input;
+  return m;
 }

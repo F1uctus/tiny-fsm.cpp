@@ -28,17 +28,17 @@ struct Node {
       case LIST:
       case COMPLETE_LIST: {
         assert(children.size() == 1);
-        return children.back()->eval();
+        return children.front()->eval();
       }
       case OPERATOR: {
-        assert(children.size() >= 1);
+        assert(!children.empty());
         auto a = children.front()->eval();
         auto op = map<char, function<int(int)>>{
             {'+', [a](int x) { return a + x; }},
             {'-', [a](int x) { return a - x; }},
             {'*', [a](int x) { return a * x; }},
             {'/', [a](int x) { return a / x; }},
-        }[value.str().back()];
+        }[value.str().front()];
         for (auto ch = children.begin()++; ch != children.end(); ch++) {
           a = op((*ch)->eval());
         }
